@@ -3,7 +3,7 @@ defaults = [
   version:          '99.99.99',
   clean:            true,
   windows_x64:      true,
-  windows_x86:      true,
+  windows_x86:      false,
   windows_x64_xp:   false,
   windows_x86_xp:   false,
   darwin_arm64:     false,
@@ -13,11 +13,11 @@ defaults = [
   linux_aarch64:    false,
   android:          false,
   core:             false,
-  desktop:          false,
+  desktop:          true,
   builder:          false,
-  server_ce:        true,
+  server_ce:        false,
   server_ee:        true,
-  server_de:        true,
+  server_de:        false,
   mobile:           false,
   password:         false,
   beta:             false,
@@ -30,8 +30,6 @@ defaults = [
 if (env.BRANCH_NAME == 'develop') {
   defaults.putAll([
     channel:          'nightly',
-    server_ce:        false,
-    server_de:        false,
     beta:             true,
   ])
 }
@@ -117,11 +115,13 @@ pipeline {
       description:  'Build Linux x86-64 targets',
       defaultValue: defaults.linux_x86_64
     )
+    /*
     booleanParam (
       name:         'linux_aarch64',
       description:  'Build Linux aarch64 targets',
       defaultValue: defaults.linux_aarch64
     )
+    */
     // Android
     /*
     booleanParam (
@@ -131,16 +131,19 @@ pipeline {
     )
     */
     // Modules
+    /*
     booleanParam (
       name:         'core',
       description:  'Build and publish "core" binaries',
       defaultValue: defaults.core
     )
+    */
     booleanParam (
       name:         'desktop',
       description:  'Build and publish DesktopEditors packages',
       defaultValue: defaults.desktop
     )
+    /*
     booleanParam (
       name:         'builder',
       description:  'Build and publish DocumentBuilder packages',
@@ -151,11 +154,13 @@ pipeline {
       description:  'Build and publish DocumentServer packages',
       defaultValue: defaults.server_ce
     )
+    */
     booleanParam (
       name:         'server_ee',
       description:  'Build and publish DocumentServer-EE packages',
       defaultValue: defaults.server_ee
     )
+    /*
     booleanParam (
       name:         'server_de',
       description:  'Build and publish DocumentServer-DE packages',
@@ -166,6 +171,7 @@ pipeline {
       description:  'Build and publish Mobile libraries',
       defaultValue: defaults.mobile
     )
+    */
     // Other
     /*
     booleanParam (
@@ -192,7 +198,7 @@ pipeline {
     booleanParam (
       name:         'notify',
       description:  'Telegram notification',
-      defaultValue: false
+      defaultValue: true
     )
   }
   triggers {
@@ -408,6 +414,7 @@ pipeline {
             aborted  { setStageStats(3) }
           }
         }
+        /*
         stage('Linux aarch64') {
           agent { label 'linux_aarch64' }
           when {
@@ -430,6 +437,7 @@ pipeline {
             aborted  { setStageStats(3) }
           }
         }
+        */
         // Android
         /*
         stage('Android') {
@@ -465,25 +473,23 @@ pipeline {
     aborted {
       node('built-in') { script { sendTelegramMessage('aborted') } }
     }
-    /*
     cleanup {
       node('built-in') {
         script {
-          parallel(
-            reports: {
+          // parallel(
+          //   reports: {
               deleteDir()
               checkout scm
-              buildAppcast()
+          //     buildAppcast()
               buildReports()
-            },
-            docker: {
-              buildDocker()
-            }
-          )
+          //   },
+          //   docker: {
+          //     buildDocker()
+          //   }
+          // )
         }
       }
     }
-    */
   }
 }
 
@@ -573,8 +579,7 @@ void buildArtifacts(String platform, String license = 'opensource') {
 void buildPackages(String platform, String license = 'opensource') {
   ArrayList targets = getTargetList(platform, license)
   if (!targets) return
-  // targets.addAll(['clean', 'deploy'])
-  targets.addAll(['clean'])
+  targets.addAll(['clean', 'deploy'])
   if (params.signing && platform.startsWith('windows'))
     targets.add('sign')
 
