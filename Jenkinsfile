@@ -4,37 +4,34 @@ defaults = [
   clean:            true,
   windows_x64:      true,
   windows_x86:      true,
-  windows_x64_xp:   true,
-  windows_x86_xp:   true,
-  darwin_arm64:     true,
-  darwin_x86_64:    true,
-  darwin_x86_64_v8: true,
+  windows_x64_xp:   false,
+  windows_x86_xp:   false,
+  darwin_arm64:     false,
+  darwin_x86_64:    false,
+  darwin_x86_64_v8: false,
   linux_x86_64:     true,
-  linux_aarch64:    true,
-  android:          true,
-  core:             true,
-  desktop:          true,
-  builder:          true,
+  linux_aarch64:    false,
+  android:          false,
+  core:             false,
+  desktop:          false,
+  builder:          false,
   server_ce:        true,
   server_ee:        true,
   server_de:        true,
-  mobile:           true,
+  mobile:           false,
   password:         false,
   beta:             false,
-  sign:             true,
+  sign:             false,
   schedule:         'H 20 * * *',
-  owner:            'ONLYOFFICE',
-  repo:             'onlyoffice',
+  owner:            'ASC-OFFICE',
+  repo:             'nn-office',
 ]
 
 if (env.BRANCH_NAME == 'develop') {
   defaults.putAll([
     channel:          'nightly',
-    darwin_x86_64_v8: false,
-    android:          false,
     server_ce:        false,
     server_de:        false,
-    mobile:           false,
     beta:             true,
   ])
 }
@@ -42,19 +39,20 @@ if (env.BRANCH_NAME ==~ /^(hotfix|release)\/.+/) {
   defaults.putAll([
     channel:          'test',
     version:          env.BRANCH_NAME.replaceAll(/.+\/v(?=[0-9.]+)/,''),
-    schedule:         'H 2 * * *',
+    schedule:         'H 6 * * *',
   ])
 }
 
 pipeline {
   agent none
   environment {
-    COMPANY_NAME = 'ONLYOFFICE'
+    COMPANY_NAME = 'NN-Office'
     BUILD_CHANNEL = "${defaults.channel}"
     BUILD_VERSION = "${defaults.version}"
     PRODUCT_VERSION = "${defaults.version}"
     S3_BASE_URL = 'https://s3.eu-west-1.amazonaws.com/repo-doc-onlyoffice-com'
     S3_BUCKET = 'repo-doc-onlyoffice-com'
+    DOCKER_ORG = 'nnof'
   }
   options {
     buildDiscarder logRotator(daysToKeepStr: '30', artifactDaysToKeepStr: '30')
@@ -83,6 +81,7 @@ pipeline {
       description:  'Build Windows x86 targets (Visual Studio 2019)',
       defaultValue: defaults.windows_x86
     )
+    /*
     booleanParam (
       name:         'windows_x64_xp',
       description:  'Build Windows x64 XP targets (Visual Studio 2015)',
@@ -93,7 +92,9 @@ pipeline {
       description:  'Build Windows x86 XP targets (Visual Studio 2015)',
       defaultValue: defaults.windows_x86_xp
     )
+    */
     // macOS
+    /*
     booleanParam (
       name:         'darwin_arm64',
       description:  'Build macOS arm64 targets',
@@ -109,6 +110,7 @@ pipeline {
       description:  'Build macOS x86-64 V8 targets',
       defaultValue: defaults.darwin_x86_64_v8
     )
+    */
     // Linux
     booleanParam (
       name:         'linux_x86_64',
@@ -121,11 +123,13 @@ pipeline {
       defaultValue: defaults.linux_aarch64
     )
     // Android
+    /*
     booleanParam (
       name:         'android',
       description:  'Build Android targets',
       defaultValue: defaults.android
     )
+    */
     // Modules
     booleanParam (
       name:         'core',
@@ -188,7 +192,7 @@ pipeline {
     booleanParam (
       name:         'notify',
       description:  'Telegram notification',
-      defaultValue: true
+      defaultValue: false
     )
   }
   triggers {
@@ -214,7 +218,7 @@ pipeline {
           agent {
             node {
               label 'windows_x64'
-              customWorkspace "C:\\oo\\${branchDir}_x64"
+              customWorkspace "C:\\nn\\${branchDir}_x64"
             }
           }
           when {
@@ -235,7 +239,7 @@ pipeline {
           agent {
             node {
               label 'windows_x86'
-              customWorkspace "C:\\oo\\${branchDir}_x86"
+              customWorkspace "C:\\nn\\${branchDir}_x86"
             }
           }
           when {
@@ -255,11 +259,12 @@ pipeline {
             aborted  { setStageStats(3) }
           }
         }
+        /*
         stage('Windows x64 XP') {
           agent {
             node {
               label 'windows_x64_xp'
-              customWorkspace "C:\\oo\\${branchDir}_x64_xp"
+              customWorkspace "C:\\nn\\${branchDir}_x64_xp"
             }
           }
           when {
@@ -283,7 +288,7 @@ pipeline {
           agent {
             node {
               label 'windows_x86_xp'
-              customWorkspace "C:\\oo\\${branchDir}_x86_xp"
+              customWorkspace "C:\\nn\\${branchDir}_x86_xp"
             }
           }
           when {
@@ -304,7 +309,9 @@ pipeline {
             aborted  { setStageStats(3) }
           }
         }
+        */
         // macOS
+        /*
         stage('macOS arm64') {
           agent { label 'darwin_arm64' }
           when {
@@ -377,6 +384,7 @@ pipeline {
             aborted  { setStageStats(3) }
           }
         }
+        */
         // Linux
         stage('Linux x86_64') {
           agent { label 'linux_x86_64' }
@@ -423,6 +431,7 @@ pipeline {
           }
         }
         // Android
+        /*
         stage('Android') {
           agent { label 'android' }
           when {
@@ -439,6 +448,7 @@ pipeline {
             aborted  { setStageStats(3) }
           }
         }
+        */
       }
     }
   }
@@ -455,6 +465,7 @@ pipeline {
     aborted {
       node('built-in') { script { sendTelegramMessage('aborted') } }
     }
+    /*
     cleanup {
       node('built-in') {
         script {
@@ -472,6 +483,7 @@ pipeline {
         }
       }
     }
+    */
   }
 }
 
@@ -561,7 +573,8 @@ void buildArtifacts(String platform, String license = 'opensource') {
 void buildPackages(String platform, String license = 'opensource') {
   ArrayList targets = getTargetList(platform, license)
   if (!targets) return
-  targets.addAll(['clean', 'deploy'])
+  // targets.addAll(['clean', 'deploy'])
+  targets.addAll(['clean'])
   if (params.signing && platform.startsWith('windows'))
     targets.add('sign')
 
@@ -730,8 +743,8 @@ ArrayList getTargetList(String platform, String license = 'any') {
     ],
     linux_x86_64: [
       core: p.core && l.os,
-      closuremaps_opensource: (p.core || p.builder || p.server_ce) && l.os,
-      closuremaps_commercial: (p.desktop || p.server_de || p.server_ee) && l.com,
+      closuremaps_opensource: false,
+      closuremaps_commercial: false,
       desktop: p.desktop && l.com,
       builder: p.builder && l.os,
       server_community: p.server_ce && l.os,
