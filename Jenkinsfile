@@ -48,8 +48,8 @@ pipeline {
     BUILD_CHANNEL = "${defaults.channel}"
     BUILD_VERSION = "${defaults.version}"
     PRODUCT_VERSION = "${defaults.version}"
-    S3_BASE_URL = 'https://s3.eu-west-1.amazonaws.com/repo-doc-onlyoffice-com'
-    S3_BUCKET = 'repo-doc-onlyoffice-com'
+    S3_BASE_URL = 'https://s3.eu-central-1.amazonaws.com/repo-doc-r7office-ru'
+    S3_BUCKET = 'repo-doc-r7office-ru'
     DOCKER_ORG = 'nnof'
   }
   options {
