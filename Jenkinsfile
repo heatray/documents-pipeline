@@ -3,7 +3,7 @@ defaults = [
   version:          '99.99.99',
   clean:            true,
   windows_x64:      true,
-  windows_x86:      false,
+  windows_x86:      true,
   windows_x64_xp:   false,
   windows_x86_xp:   false,
   darwin_arm64:     false,
